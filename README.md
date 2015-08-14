@@ -12,6 +12,10 @@ and external data. It supports nested JSON data, and can resolve
 basic dependency graphs while providing access to intermediary data
 formats.
 
+Install
+-------
+
+`$ gem install fn-salesforce --pre`
 
 Artifacts
 ---------
