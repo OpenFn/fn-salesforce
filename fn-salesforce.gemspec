@@ -9,9 +9,19 @@ Gem::Specification.new do |spec|
   spec.authors       = ["Stuart Corbishley"]
   spec.email         = ["corbish@gmail.com"]
 
-  spec.summary       = %q{TODO: Write a short summary, because Rubygems requires one.}
-  spec.description   = %q{TODO: Write a longer description or delete this line.}
-  spec.homepage      = "TODO: Put your gem's website or public repo URL here."
+  spec.summary       = %q{Salesforce support adaptor for OpenFn}
+  spec.description = <<-EOF
+    CLI Tool and Adaptor for working with Salesforce.
+
+    Intended to be used in conjunction with OpenFn, but has been designed
+    with standalone use in mind.
+
+    Leveraging JSON-Schema, fn-salesforce acts as a bridge between Salesforce
+    and external data. It supports nested JSON data, and can resolve
+    basic dependency graphs while providing access to intermediary data
+    formats.
+  EOF
+  spec.homepage      = "https://github.com/stuartc/fn-salesforce"
   spec.license       = "MIT"
 
   # Prevent pushing this gem to RubyGems.org by setting 'allowed_push_host', or
@@ -23,8 +33,8 @@ Gem::Specification.new do |spec|
   end
 
   spec.files         = `git ls-files -z`.split("\x0").reject { |f| f.match(%r{^(test|spec|features)/}) }
-  spec.bindir        = "exe"
-  spec.executables   = spec.files.grep(%r{^exe/}) { |f| File.basename(f) }
+  spec.bindir        = "bin"
+  spec.executables   = [ "fn-salesforce" ]
   spec.require_paths = ["lib"]
 
   spec.add_development_dependency "bundler", "~> 1.9"

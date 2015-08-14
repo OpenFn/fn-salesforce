@@ -1,35 +1,37 @@
 # OpenFn Salesforce Adaptor
 
-Thin exploration of state, data flow and artifacts required to process
-a destination payload for Salesforce.
+*pre-release*
 
-Prerequisites
--------------
+CLI Tool and Adaptor for working with Salesforce.
+
+Intended to be used in conjunction with OpenFn, but has been designed
+with standalone use in mind.
+
+Leveraging JSON-Schema, fn-salesforce acts as a bridge between Salesforce
+and external data. It supports nested JSON data, and can resolve
+basic dependency graphs while providing access to intermediary data
+formats.
+
+
+Artifacts
+---------
 
 * **Credentials**  
   In order to communicate with Salesforce, a set of API credentials should
   be available at processing time.
 
-* **Source Message**  
-  Generic JSON document of the submission.
-
-* **Transform Directive**  
-  Jolt transform instructions to create a destination message.
-
 * **Destination Message**  
   Generic JSON document provided to the Saleforce adaptor.
 
-* **Prepared Messages**
+* **Prepared Messages / Plan**
   Intermediary JSON document used internally to represent the order and
   the unfulfilled dependent values at the time of execution.
 
   The array of objects received are assumed to be in a reliable order.
 
-
-* **Destination Schema**
-  In order to validate changes to the destination message, using a Schema while
-  documenting the changes to it should be useful.
-  
+* **Schema**
+  JSON Schema document used to assemble a plan, linking up the SObject names
+  with the relationship keys found on the destination message.
 
 - - -
 
