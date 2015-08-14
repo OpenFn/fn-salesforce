@@ -1,0 +1,9 @@
+[
+    {
+        "operation": "shift",
+        "spec": {
+            "parent": "vera__events__c.vera__event_name__c"
+        }
+    }
+]
+

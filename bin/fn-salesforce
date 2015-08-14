@@ -1,0 +1,85 @@
+#!/usr/bin/env ruby
+# encoding: utf-8
+
+$LOAD_PATH.unshift File.expand_path('../../lib', __FILE__)
+
+require 'optparse'
+require 'fn/salesforce'
+require 'fn/salesforce/cli'
+
+options = {}
+
+base = OptionParser.new do |opts|
+  opts.banner = "Usage: fn-salesforce COMMAND [options] [subject]"
+
+  opts.separator ""
+  opts.separator <<HELP
+Commonly used command are:
+  push :     Push a JSON document to Salesforce
+  describe : Describe a Salesforce object
+  See 'fn-salesforce COMMAND --help' for more information on a specific command.
+HELP
+
+end
+
+commands = { 
+  prepare: OptionParser.new  { |opts|
+    opts.banner = "Usage: prepare [options] PAYLOAD"
+    opts.on("-sSCHEMA", "--schema SCHEMA", "JSON-Schema description of payload") do |n|
+      options[:schema] = n
+    end
+    opts.on("-v", "--verbose", "Enable verbose output") do |v|
+      options[:verbose] = v
+    end
+  },
+  push: OptionParser.new  { |opts|
+    opts.banner = "Usage: push [options] PLAN"
+    opts.on("-cCREDENTIALS", "--credentials CREDENTIALS", "API Credentials for Salesforce") do |f|
+      options[:credentials] = f
+    end
+    opts.on("-v", "--verbose", "Enable verbose output") do |v|
+      options[:verbose] = v
+    end
+  },
+  describe: OptionParser.new { |opts|
+    options[:format] = "json"
+
+    opts.banner = "Usage: describe [options] OBJECT"
+    opts.on("-cCREDENTIALS", "--credentials CREDENTIALS", "API Credentials for Salesforce") do |f|
+      options[:credentials] = f
+    end
+    opts.on("-f", "--format", "Output format (json, raw, schema)") do |f|
+      options[:format] = f
+    end
+    opts.on("-v", "--verbose", "Enable verbose output") do |v|
+      options[:verbose] = v
+    end
+  } 
+}
+
+command_key = (ARGV.shift || "").to_sym
+command = commands[command_key] || base
+
+command.parse!
+
+case command_key
+when :describe
+
+  options.merge!( {target:ARGV.slice(-1)} )
+  Fn::Salesforce::CLI.describe(options)
+
+when :push
+
+  options.merge!( {plan:ARGV.slice(-1)} )
+  Fn::Salesforce::CLI.push(options)
+
+when :prepare
+
+  options.merge!( {message:ARGV.slice(-1)} )
+  Fn::Salesforce::CLI.prepare(options)
+
+else
+  puts command
+end
+  
+

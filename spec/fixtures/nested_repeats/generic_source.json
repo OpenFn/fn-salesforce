@@ -1,0 +1,35 @@
+{
+    "id": "nested_repeats",
+    "instanceID": "uuid:c9db5fa8-8e92-4983-9e8a-299247da9d90",
+    "submissionDate": "2015-01-26T15:16:21.421Z",
+    "isComplete": "true",
+    "markedAsCompleteDate": "2015-01-26T15:16:21.421Z",
+    "parent": "Taylor",
+    "child_repeat": [
+        {
+            "name": "Maisie",
+            "birthweight": "15.0000000000",
+            "child_toys_repeat": [
+                {
+                    "toy_name": "Chew toy",
+                    "toy_rating": "9"
+                },
+                {
+                    "toy_name": "Tugger",
+                    "toy_rating": "5"
+                }
+            ]
+        },
+        {
+            "name": "Colin",
+            "birthweight": "42.0000000000",
+            "child_toys_repeat": {
+                "toy_name": "Csr",
+                "toy_rating": "5"
+            }
+        }
+    ],
+    "meta": {
+        "instanceID": "uuid:c9db5fa8-8e92-4983-9e8a-299247da9d90"
+    }
+}
