@@ -18,17 +18,39 @@ class Fn::Salesforce::ObjectFactory
   end
 
   def create(key, properties, parent=nil)
-    sobject = sobject_for(key) || key
-    properties.merge! Hash[foreign_key_for(key), {"$ref" => "/#{parent}/properties/Id"}] if parent
-
-    {
-      "sObject" => sobject,
-      "properties" => properties
-    }
+   
+    [
+      ->(obj) {
+        { "properties" => properties }
+      },
+      ->(obj) {
+        { "sObject" => sobject_for(key) || key }
+      },
+      ->(obj) {
+        return {} unless parent
+        {
+          "properties" => obj["properties"].merge(
+            Hash[ foreign_key_for(key), {"$ref" => "/#{parent}/properties/Id"} ]
+          )
+        }
+      },
+      ->(obj) { 
+        return {} unless lookup_key = lookup_key_for(key)
+        {
+          "method" => "update",
+          "lookupWith" => Hash[lookup_key, obj["properties"][lookup_key]],
+          "properties" => obj["properties"].select { |k| k != lookup_key } 
+        }
+      }
+    ].reduce({}) { |memo,op| memo.merge op[memo] }
   end
 
   def sobject_for(key)
     JsonPath.on(schema,"..properties.#{key}.sObject").first
+  end
+
+  def lookup_key_for(key)
+    JsonPath.on(schema,"..properties.#{key}.lookupKey").first
   end
 
   def foreign_key_for(relationship_key)

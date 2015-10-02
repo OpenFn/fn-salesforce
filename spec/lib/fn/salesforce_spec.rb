@@ -26,9 +26,10 @@ describe Fn::Salesforce do
           "properties": {
             "my__Custom_Reference__c": {
               "$ref": "/1/properties/Id"
-            },
-            "firstName" : "Ile"
-          }
+            }
+          },
+          "method": "update",
+          "lookupWith": { "firstName": "Ile" }
         }
       ]'
     }
@@ -39,7 +40,8 @@ describe Fn::Salesforce do
 
     it "sends objects to Salesforce in order" do
       expect(Restforce).to receive(:new).and_return(client)
-      expect(client).to receive(:create!).exactly(3).times
+      expect(client).to receive(:create!).exactly(2).times
+      expect(client).to receive(:update!).exactly(1).times
       subject
     end
 
@@ -55,10 +57,11 @@ describe Fn::Salesforce do
         "firstName" => "Stuart"
       }).and_return "67891"
 
-      expect(client).to receive(:create!).with("my__ChildObject__c", {
-        "my__Custom_Reference__c" => "67891",
-        "firstName" => "Ile"
-      })
+      expect(client).to receive(:update!).with(
+        "my__ChildObject__c", 
+        { "firstName" => "Ile" },
+        { "my__Custom_Reference__c" => "67891" }
+      )
 
       subject
     end
@@ -75,10 +78,11 @@ describe Fn::Salesforce do
         "firstName" => "Stuart"
       }).and_return "67891"
 
-      expect(client).to receive(:create!).with("my__ChildObject__c", {
-        "my__Custom_Reference__c" => "67891",
-        "firstName" => "Ile"
-      }).and_raise Exception
+      expect(client).to receive(:update!).with(
+        "my__ChildObject__c", 
+        { "firstName" => "Ile" },
+        { "my__Custom_Reference__c" => "67891" }
+      ).and_raise Exception
 
       expect(client).to receive(:destroy).with('my__ObjectName__c', '12345')
       expect(client).to receive(:destroy).with('my__ChildObject__c', '67891')
@@ -91,8 +95,12 @@ describe Fn::Salesforce do
   describe "#prepare" do
     it "raises an error when not provided configuration" do
       expect( -> {
-        Fn::Salesforce.push
+        Fn::Salesforce.prepare
       } ).to raise_error ArgumentError
+    end
+
+    context "parent-child dependencies" do
+
     end
 
   end

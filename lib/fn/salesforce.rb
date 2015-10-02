@@ -30,14 +30,23 @@ module Fn
           }.
           map { |i| Hash[*i] }.inject(&:merge)
 
-          $stderr.puts "Creating #{obj["sObject"]}: #{ obj["properties"] }"
-          id = client.create!(obj["sObject"], obj["properties"])
+          case obj["method"]
+          when "update"
+            # TODO: this needs to do a query first, then update
+            # and raise an error if it can't be found.
+            $stderr.puts "Upserting #{obj["sObject"]}: #{ obj["properties"] }"
+            id = client.upsert!(obj["sObject"], *obj["lookupWith"].keys.first, obj["properties"].merge(obj["lookupWith"]))
+          when nil
+            $stderr.puts "Creating #{obj["sObject"]}: #{ obj["properties"] }"
+            id = client.create!(obj["sObject"], obj["properties"])
+          end
 
           obj["properties"]["Id"] = id
           plan.push obj
 
         rescue Exception => e
           $stderr.puts e
+          $stderr.puts e.backtrace.join("\n")
           if plan.any?
             $stderr.puts "Rolling back previous objects"
             plan.each { |obj| 

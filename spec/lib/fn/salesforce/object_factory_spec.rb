@@ -55,39 +55,72 @@ describe Fn::Salesforce::ObjectFactory do
 
       it { expect(subject).to eql('my__Custom_Object__c') }
     end
-    
+
   end
 
-  describe 'preparing a child object' do
-
+  describe "preparing" do
+    
     let(:schema) { 
-      JSON.parse(
-        File.read('./spec/fixtures/nested_objects/test.schema.json')
-      ) 
+      JSON.parse( %{
+          {
+            "title" : "Test Object",
+            "properties" : {
+              "my__Custom_Relationship__r" : {
+                "type" : "array",
+                "foreignKey" : "vera__Test_Event__c",
+                "sObject" : "my__Custom_Object__c"
+              },
+              "my__Existing_Objects__r" : {
+                "type" : "array",
+                "foreignKey" : "vera__Test_Event__c",
+                "sObject" : "my__Custom_Object__c",
+                "lookupKey" : "foo"
+              }
+            },
+            "type" : "object",
+            "$schema" : "http://json-schema.org/draft-04/schema#"
+          }
+      }) 
     }
 
-    it "sets the sObject based on the relationship" do
-      prepared_object = factory.create('my__Custom_Relationship__r', {
-        "foo" => "bar"
-      }, {})
+    subject { prepared_object }
 
-      expect(prepared_object["sObject"]).to eql "my__Custom_Object__c"
+    describe 'a child object' do
 
-    end
+      let(:prepared_object) { 
+        factory.create('my__Custom_Relationship__r', { "foo" => "bar" }, 10)
+      }
 
-    it "adds the foreign key based on the relationship" do
-      prepared_object = factory.create('my__Custom_Relationship__r', {
-        "foo" => "bar"
-      }, 10)
-
-      expect(prepared_object["properties"]).to eql({
-        "foo" => "bar",
-        "vera__Test_Event__c" => {"$ref" => "/10/properties/Id"}
-      })
+      it { is_expected.to eql( {
+        "sObject" => "my__Custom_Object__c",
+        "properties" => {
+          "foo" => "bar",
+          "vera__Test_Event__c" => {"$ref"=>"/10/properties/Id"}
+        }
+      } )}
 
     end
-    
+
+    describe 'preparing an object update' do
+
+      let(:prepared_object) { 
+        factory.create('my__Existing_Objects__r', { "foo" => "bar" }, 10)
+      }
+
+      it { is_expected.to eql( {
+        "sObject" => "my__Custom_Object__c",
+        "lookupWith" => {
+          "foo" => "bar"
+        },
+        "method" => "update",
+        "properties" => {
+          "vera__Test_Event__c" => {"$ref"=>"/10/properties/Id"}
+        }
+      } )}
+
+    end
   end
+
 
 end
 
