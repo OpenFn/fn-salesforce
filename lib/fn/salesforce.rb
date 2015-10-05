@@ -2,7 +2,7 @@ require "json"
 require "fn/salesforce/version"
 require "fn/salesforce/environment"
 require "fn/salesforce/options"
-require "fn/salesforce/object"
+require "fn/salesforce/operation"
 require "fn/salesforce/object_factory"
 require "fn/salesforce/walker"
 require "restforce"
@@ -17,6 +17,12 @@ module Fn
     def self.push(credentials, message)
 
       client = Restforce.new(credentials)
+      plan = Plan.new(message)
+
+      dispatcher = Dispatcher.new(client, plan)
+
+      dispatcher.execute
+
       message.
         inject([]) { |plan,obj| 
 

@@ -4,7 +4,7 @@ describe Fn::Salesforce do
 
   describe "#push" do
 
-    let(:prepared_payload) {
+    let(:message) {
       JSON.parse '[
         {
           "sObject": "my__ObjectName__c",
@@ -28,17 +28,70 @@ describe Fn::Salesforce do
               "$ref": "/1/properties/Id"
             }
           },
-          "method": "update",
+          "action": "update",
           "lookupWith": { "firstName": "Ile" }
         }
       ]'
     }
 
-    subject { Fn::Salesforce.push({}, prepared_payload) }
+    let(:credentials) { spy("Credentials") }
+    let(:push) { Fn::Salesforce.push(credentials, message) }
 
-    let(:client) { double("Restforce client") }
+    context 'setting up' do
 
-    it "sends objects to Salesforce in order" do
+      before :each do
+        allow(Restforce).to receive(:new).and_return(client)
+        allow(Fn::Salesforce::Plan).to receive(:new).and_return(plan)
+        allow(Fn::Salesforce::Dispatcher).to receive(:new).and_return(dispatcher)
+        push
+      end
+
+      let(:client) { double("Client") }
+      let(:plan) { double("Plan") }
+      let(:dispatcher) { double("Dispatcher", execute: true) }
+
+      context "coerces the message to a Plan" do
+        subject { Fn::Salesforce::Plan }
+        it { is_expected.to have_received(:new).with(message) }
+      end
+
+      context "sets up the Restforce client" do
+        subject { Restforce }
+        it { is_expected.to have_received(:new).with(credentials) }
+      end
+
+      context 'sets up the Dispatcher' do
+        subject { Fn::Salesforce::Dispatcher }
+        it { is_expected.to have_received(:new).with(client, plan) }
+      end
+
+      context 'executes the dispatcher' do
+        subject { dispatcher }
+        it { is_expected.to have_received(:execute) }
+        
+      end
+      
+    end
+
+    context 'when working' do
+      context 'calls execute on the dispatcher' do
+        before do
+          allow(Fn::Salesforce::Dispatcher).to receive(:perform)
+          push
+        end
+
+        subject { Fn::Salesforce::Dispatcher }
+        it { is_expected.to have_received(:perform).exactly(4).times }
+      end
+      context 'it updates references', skip: "TODO"
+    end
+
+    context 'handling errors' do
+      context 'it stops processing operations', skip: "TODO"
+    end
+
+
+    it "sends objects to Salesforce in order", skip: "DEPRECATED" do
       expect(Restforce).to receive(:new).and_return(client)
       expect(client).to receive(:create!).exactly(2).times
       expect(client).to receive(:update!).exactly(1).times
@@ -57,7 +110,7 @@ describe Fn::Salesforce do
         "firstName" => "Stuart"
       }).and_return "67891"
 
-      expect(client).to receive(:update!).with(
+      expect(client).to receive(:upsert!).with(
         "my__ChildObject__c", 
         { "firstName" => "Ile" },
         { "my__Custom_Reference__c" => "67891" }
@@ -66,7 +119,7 @@ describe Fn::Salesforce do
       subject
     end
 
-    it "performs a rollback when an error is encountered" do
+    pending "performs a rollback when an error is encountered" do
       expect(Restforce).to receive(:new).and_return(client)
 
       expect(client).to receive(:create!).with("my__ObjectName__c", {
