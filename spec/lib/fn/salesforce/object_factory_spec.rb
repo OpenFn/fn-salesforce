@@ -95,7 +95,7 @@ describe Fn::Salesforce::ObjectFactory do
         "sObject" => "my__Custom_Object__c",
         "properties" => {
           "foo" => "bar",
-          "vera__Test_Event__c" => {"$ref"=>"/10/properties/Id"}
+          "vera__Test_Event__c" => {"$ref"=>"/10/Id"}
         }
       } )}
 
@@ -114,7 +114,7 @@ describe Fn::Salesforce::ObjectFactory do
         },
         "action" => "update",
         "properties" => {
-          "vera__Test_Event__c" => {"$ref"=>"/10/properties/Id"}
+          "vera__Test_Event__c" => {"$ref"=>"/10/Id"}
         }
       } )}
 

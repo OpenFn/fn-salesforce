@@ -100,7 +100,7 @@ describe Fn::Salesforce::Transaction do
 
         context 'appends the Id' do
           let(:client) { spy("Client", create!: '1234') }
-          subject { operation.properties["Id"] }
+          subject { operation["Id"] }
           it { is_expected.to eql('1234') }
         end
       end
@@ -125,6 +125,10 @@ describe Fn::Salesforce::Transaction do
         it("finds the particular object") {
           is_expected.to have_received(:find).
           with('Account', '1234', 'Some_External_Id_Field__c') 
+        }
+
+        it("merges in the current properties as previousProperties") {
+          expect(operation.previous_properties).to eql( { "Name" => "Baz" } ) 
         }
 
         it("merges in the located Id and calls #update!") {

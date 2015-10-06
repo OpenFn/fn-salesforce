@@ -24,6 +24,10 @@ module Fn
         ( send :[], "properties" ) || {}
       end
 
+      def previous_properties
+        ( send :[], "previousProperties" ) || {}
+      end
+
       def references
         properties.select { |k,v| 
           v.is_a? Hash

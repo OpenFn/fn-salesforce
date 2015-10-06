@@ -30,7 +30,7 @@ class Fn::Salesforce::ObjectFactory
         return {} unless parent
         {
           "properties" => obj["properties"].merge(
-            Hash[ foreign_key_for(key), {"$ref" => "/#{parent}/properties/Id"} ]
+            Hash[ foreign_key_for(key), {"$ref" => "/#{parent}/Id"} ]
           )
         }
       },

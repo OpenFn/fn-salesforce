@@ -31,7 +31,7 @@ module Fn
         when :create
           $stderr.puts "Creating #{operation.s_object}: #{ operation.properties }"
           id = client.create!( operation.s_object, operation.properties.dup )
-          operation.properties.merge!( {"Id" => id} )
+          operation.merge!( {"Id" => id} )
         when :update
           $stderr.puts "Finding #{operation.s_object}: #{ operation.lookup_with }"
           object = client.find(
@@ -39,10 +39,13 @@ module Fn
             *operation.lookup_with.invert.to_a.flatten
           ) 
           $stderr.puts "Found #{operation.s_object}(#{object.Id})"
-          operation.properties.merge!( {"Id" => object.Id} )
+          operation.merge!( {"Id" => object.Id} )
 
           $stderr.puts "Updating #{operation.s_object}: #{ operation.properties }"
-          client.update!( operation.s_object, operation.properties )
+          client.update!(
+            operation.s_object,
+            Hash["Id", operation["Id"]].merge( operation.properties )
+          )
 
         when :upsert #TODO
           raise NotImplementedError

@@ -37,6 +37,10 @@ describe Fn::Salesforce do
     let(:credentials) { spy("Credentials") }
     let(:push) { Fn::Salesforce.push(credentials, message) }
 
+    let(:client) { double("Client") }
+    let(:plan) { double("Plan") }
+    let(:transaction) { double("Transaction", execute: true) }
+
     context 'setting up' do
 
       before :each do
@@ -45,10 +49,6 @@ describe Fn::Salesforce do
         allow(Fn::Salesforce::Transaction).to receive(:new).and_return(transaction)
         push
       end
-
-      let(:client) { double("Client") }
-      let(:plan) { double("Plan") }
-      let(:transaction) { double("Transaction", execute: true) }
 
       context "coerces the message to a Plan" do
         subject { Fn::Salesforce::Plan }
@@ -68,13 +68,17 @@ describe Fn::Salesforce do
       context 'executes the transaction' do
         subject { transaction }
         it { is_expected.to have_received(:execute) }
-        
       end
       
     end
 
-    context 'on transaction failure', skip: "TODO" do
-      it "creates a Rollback plan"
+    context 'on transaction failure' do
+
+      before { allow(transaction).to receive(:execute).and_raise Exception }
+
+      it "creates a Rollback plan" do
+        expect(Fn::Salesforce::Rollback).to have_received(:new).with(plan) 
+      end
       it "executes the Rollback plan"
     end
 
