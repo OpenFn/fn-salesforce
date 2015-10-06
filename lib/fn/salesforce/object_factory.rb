@@ -37,7 +37,7 @@ class Fn::Salesforce::ObjectFactory
       ->(obj) { 
         return {} unless lookup_key = lookup_key_for(key)
         {
-          "method" => "update",
+          "action" => "update",
           "lookupWith" => Hash[lookup_key, obj["properties"][lookup_key]],
           "properties" => obj["properties"].select { |k| k != lookup_key } 
         }

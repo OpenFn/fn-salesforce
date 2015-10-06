@@ -10,16 +10,20 @@ class Fn::Salesforce::Options
   def credentials
     return @credentials if @credentials
 
-    credentials = JSON.parse(File.read(@attributes[:credentials]))
-    @credentials = Hashie::Mash.new( {
-      username:       credentials["username"],
-      password:       credentials["password"],
-      security_token: credentials["token"],
-      client_id:      credentials["key"],
-      client_secret:  credentials["secret"],
-      host:           credentials["host"]
-    } ).to_hash(symbolize_keys: true)
+    if @attributes[:credentials].is_a? String
+      attributes = JSON.parse(File.read(@attributes[:credentials]))
+    else 
+      attributes = @attributes[:credentials]
+    end
 
+    @credentials = Hashie::Mash.new( {
+      username:       attributes["username"],
+      password:       attributes["password"],
+      security_token: attributes["token"],
+      client_id:      attributes["key"],
+      client_secret:  attributes["secret"],
+      host:           attributes["host"]
+    } ).to_hash(symbolize_keys: true)
   end
 
   def schema

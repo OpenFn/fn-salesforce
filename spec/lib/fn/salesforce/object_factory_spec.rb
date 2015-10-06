@@ -112,7 +112,7 @@ describe Fn::Salesforce::ObjectFactory do
         "lookupWith" => {
           "foo" => "bar"
         },
-        "method" => "update",
+        "action" => "update",
         "properties" => {
           "vera__Test_Event__c" => {"$ref"=>"/10/properties/Id"}
         }
