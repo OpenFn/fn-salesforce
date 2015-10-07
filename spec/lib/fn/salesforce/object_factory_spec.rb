@@ -35,7 +35,7 @@ describe Fn::Salesforce::ObjectFactory do
     subject { factory.create(key,properties) }
 
     it { expect(subject["sObject"]).to eql('my__Custom_Object__c') }
-
+    it { expect(subject["action"]).to eql('create') }
     it { expect(subject["properties"][ 'name' ]).to eql( 'Fred' ) }
 
   end
@@ -93,6 +93,7 @@ describe Fn::Salesforce::ObjectFactory do
 
       it { is_expected.to eql( {
         "sObject" => "my__Custom_Object__c",
+        "action" => "create",
         "properties" => {
           "foo" => "bar",
           "vera__Test_Event__c" => {"$ref"=>"/10/Id"}

@@ -24,6 +24,9 @@ class Fn::Salesforce::ObjectFactory
         { "properties" => properties }
       },
       ->(obj) {
+        { "action" => "create" }
+      },
+      ->(obj) {
         { "sObject" => sobject_for(key) || key }
       },
       ->(obj) {
