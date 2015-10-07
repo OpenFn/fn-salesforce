@@ -3,29 +3,22 @@ require 'delegate'
 module Fn
   module Salesforce
 
-    class Operation < SimpleDelegator
-      def initialize(attrs={})
-        super(attrs)
-      end
+    class Operation < Hashie::Mash
 
       def action
-        ( send( :[], "action" ) || :create ).to_sym
+        (super || :create ).to_sym
       end
 
       def s_object
-        send :[], "sObject"
+        sObject
       end
 
       def lookup_with
-        send :[], "lookupWith"
-      end
-
-      def properties
-        ( send :[], "properties" ) || {}
+        lookupWith
       end
 
       def previous_properties
-        ( send :[], "previousProperties" ) || {}
+        previousProperties
       end
 
       def references

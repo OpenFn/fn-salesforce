@@ -25,6 +25,8 @@ module Fn
 
       transaction.execute
 
+      transaction.rollback! if transaction.failed
+
     end
 
     # Prepare

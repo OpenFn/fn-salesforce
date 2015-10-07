@@ -2,19 +2,20 @@ require 'spec_helper'
 
 describe Fn::Salesforce::Transaction do
 
+  let(:client) { double("Client") }
+  let(:plan) { double("Plan") }
+
   context '#initialize' do
 
-    let(:client) { double("Client") }
-    let(:plan) { double("Plan") }
-    let(:dispatcher) { described_class.new(client, plan) }
+    let(:transaction) { described_class.new(client, plan) }
 
     context '#plan' do
-      subject { dispatcher.plan }
+      subject { transaction.plan }
       it { is_expected.to eql plan }
     end
 
     context '#client' do
-      subject { dispatcher.client }
+      subject { transaction.client }
       it { is_expected.to eql client }
     end
     
@@ -70,8 +71,8 @@ describe Fn::Salesforce::Transaction do
         it { is_expected.to be true }
       end
 
-      context '#actual' do
-        subject { transaction.actual.count }
+      context '#result' do
+        subject { transaction.result.count }
         it { is_expected.to eql 1 }
       end
       
@@ -80,7 +81,7 @@ describe Fn::Salesforce::Transaction do
 
   context '.perform' do
 
-    let!(:dispatcher) { described_class.perform(operation, client) }
+    let!(:transaction) { described_class.perform(operation, client) }
     let(:client) { spy("Client") }
 
     context 'when handling' do
@@ -110,9 +111,24 @@ describe Fn::Salesforce::Transaction do
         it { is_expected.to have_received(:upsert!) }
       end
 
+      describe "a delete operation" do
+
+        let(:operation) { Fn::Salesforce::Operation.new({
+          "action" => "update",
+          "sObject" => "Account",
+          "Id" => "1234",
+          "action" => "delete",
+          "properties" => { "Name" => "Foobar" }
+        }) }
+
+        it { is_expected.to have_received(:destroy!).with("Account", "1234") }
+
+        
+      end
+
       describe "an update operation" do
 
-        let(:restforce_object) { spy("Account Object", Id: '4567') }
+        let(:restforce_object) { Hashie::Mash.new(Id: '4567', Name: "Baz") }
         let(:client) { spy("Client", { find: restforce_object }) }
         let(:operation) { Fn::Salesforce::Operation.new({
           "action" => "update",
@@ -141,12 +157,35 @@ describe Fn::Salesforce::Transaction do
 
     context 'after handling' do
 
-      let(:operation) { Fn::Salesforce::Operation.new }
-      subject { dispatcher }
+      let(:operation) { Fn::Salesforce::Operation.new(properties: {}) }
+      subject { transaction }
 
       it { is_expected.to eql operation }
       
     end
 
+  end
+
+  context '#rollback!' do
+
+    let(:result) { [{},{},{}] }
+    let(:transaction) { described_class.new(client, plan) }
+
+    before {
+      allow(Fn::Salesforce::Rollback).to receive(:new).and_return result
+      allow(Fn::Salesforce::Transaction).to receive(:perform)
+      allow(transaction).to receive(:result).and_return result
+    }
+
+    it 'is expected to create a rollback plan with the resulting plan' do
+      expect(Fn::Salesforce::Rollback).to receive(:new).with(result)
+      transaction.rollback!
+    end
+
+    it 'is expected to execute the rollback plan' do
+      expect(Fn::Salesforce::Transaction).to receive(:perform).exactly(3).times
+      transaction.rollback!
+    end
+    
   end
 end

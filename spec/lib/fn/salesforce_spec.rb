@@ -39,7 +39,7 @@ describe Fn::Salesforce do
 
     let(:client) { double("Client") }
     let(:plan) { double("Plan") }
-    let(:transaction) { double("Transaction", execute: true) }
+    let(:transaction) { double("Transaction", failed: false, execute: true) }
 
     context 'setting up' do
 
@@ -70,17 +70,18 @@ describe Fn::Salesforce do
         it { is_expected.to have_received(:execute) }
       end
       
-    end
+      context 'on transaction failure' do
 
-    context 'on transaction failure' do
+        let(:transaction) {
+          spy("Transaction", failed: true)
+        }
 
-      before { allow(transaction).to receive(:execute).and_raise Exception }
-
-      it "creates a Rollback plan" do
-        expect(Fn::Salesforce::Rollback).to have_received(:new).with(plan) 
+        it "calls for a rollback" do
+          expect(transaction).to have_received(:rollback!)
+        end
       end
-      it "executes the Rollback plan"
     end
+
 
   end
 
