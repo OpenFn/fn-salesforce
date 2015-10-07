@@ -31,11 +31,11 @@ module Fn
         case operation.action
 
         when :create
-          $stderr.puts "Creating #{operation.s_object}: #{ operation.properties }"
+          $stderr.puts "Creating #{operation.s_object}: #{ operation.properties.to_hash }"
           id = client.create!( operation.s_object, operation.properties.dup )
           operation.merge!( {"Id" => id} )
         when :update
-          $stderr.puts "Finding #{operation.s_object}: #{ operation.lookup_with }"
+          $stderr.puts "Finding #{operation.s_object}: #{ operation.lookup_with.to_hash }"
           object = client.find(
             operation.s_object,
             *operation.lookup_with.invert.to_a.flatten
@@ -51,7 +51,7 @@ module Fn
           operation.previousProperties = object.select { |key, value|
             operation.properties.keys.include?(key)
           }
-          $stderr.puts "Updating #{operation.s_object}: #{ operation.properties }"
+          $stderr.puts "Updating #{operation.s_object}: #{ operation.properties.to_hash }"
 
           client.update!(
             operation.s_object,
