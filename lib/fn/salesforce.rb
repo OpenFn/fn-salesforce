@@ -27,6 +27,9 @@ module Fn
 
       transaction.rollback! if transaction.failed
 
+      # Return true for success, false for failure.
+      !transaction.failed
+
     end
 
     # Prepare
