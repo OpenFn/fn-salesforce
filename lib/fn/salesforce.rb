@@ -16,12 +16,12 @@ module Fn
     # Push
     # ----
     # Takes a prepared payload, and sends it to Salesforce.
-    def self.push(credentials, message)
+    def self.push(credentials, message, logger: Logger.new(STDOUT))
 
       client = Restforce.new(credentials)
       plan = Plan.new(message)
 
-      transaction = Transaction.new(client, plan)
+      transaction = Transaction.new(client, plan, logger: logger)
 
       transaction.execute
 

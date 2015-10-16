@@ -4,8 +4,10 @@ module Fn
     class Transaction
 
       attr_reader :client, :plan, :failed, :result
+      attr_accessor :logger
 
-      def initialize(client, plan)
+      def initialize(client, plan, logger: Logger.new(STDOUT))
+        @logger = logger
         @client = client
         @plan = plan
         @result = []
@@ -16,9 +18,9 @@ module Fn
         @result = plan.inject([]) { |results, operation|
           begin
             operation.replace_refs(results)
-            results << Transaction.perform(operation,client)
+            results << perform(operation)
           rescue Exception => e
-            $stderr.puts "Transaction failed at ##{plan.index(operation)}"
+            logger.warn "Transaction failed at ##{plan.index(operation)}"
             @failed = true
             break results
           end
@@ -26,22 +28,30 @@ module Fn
         }
       end
 
-      def self.perform(operation, client)
-        puts operation.action.inspect
+
+      def rollback!
+        Rollback.new(result).each { |operation|
+          perform(operation, client)
+        }
+      end
+
+      private
+
+      def perform(operation)
         case operation.action
 
         when :create
-          $stderr.puts "Creating #{operation.s_object}: #{ operation.properties.to_hash }"
+          logger.info "Creating #{operation.s_object}: #{ operation.properties.to_hash }"
           id = client.create!( operation.s_object, operation.properties.dup )
           operation.merge!( {"Id" => id} )
         when :update
-          $stderr.puts "Finding #{operation.s_object}: #{ operation.lookup_with.to_hash }"
+          logger.info "Finding #{operation.s_object}: #{ operation.lookup_with.to_hash }"
           object = client.find(
             operation.s_object,
             *operation.lookup_with.invert.to_a.flatten
           ) 
 
-          $stderr.puts "Found #{operation.s_object}(#{object.Id})"
+          logger.info "Found #{operation.s_object}(#{object.Id})"
           # Keep the Id we get back from the find operation, we
           # use this for updating the object, and for rolling back if needed.
           operation.merge!( {"Id" => object.Id} )
@@ -51,7 +61,7 @@ module Fn
           operation.previousProperties = object.select { |key, value|
             operation.properties.keys.include?(key)
           }
-          $stderr.puts "Updating #{operation.s_object}: #{ operation.properties.to_hash }"
+          logger.info "Updating #{operation.s_object}: #{ operation.properties.to_hash }"
 
           client.update!(
             operation.s_object,
@@ -59,23 +69,17 @@ module Fn
           )
 
         when :delete
-          $stderr.puts "Deleting #{operation.s_object}(#{operation.Id})"
+          logger.info "Deleting #{operation.s_object}(#{operation.Id})"
           client.destroy!(operation.sObject, operation.Id)
 
         when :upsert #TODO
           raise NotImplementedError
           # client.upsert!
         else
-          $stderr.puts "Warning: No action found for #{operation.inspect}. Skipping."
+          logger.warn "Warning: No action found for #{operation.inspect}. Skipping."
         end
 
         operation
-      end
-
-      def rollback!
-        Rollback.new(result).each { |operation|
-          Transaction.perform(operation, client)
-        }
       end
 
     end
