@@ -20,7 +20,8 @@ module Fn
             operation.replace_refs(results)
             results << perform(operation)
           rescue Exception => e
-            logger.warn "Transaction failed at ##{plan.index(operation)}"
+            logger.error "Transaction failed at ##{plan.index(operation)}"
+            logger.error "Error message: #{e.message}"
             @failed = true
             break results
           end
