@@ -4,6 +4,7 @@ describe Fn::Salesforce::Transaction do
 
   let(:client) { double("Client") }
   let(:plan) { double("Plan") }
+  let(:logger) { Logger.new(nil) }
 
   context '#initialize' do
 
@@ -33,12 +34,15 @@ describe Fn::Salesforce::Transaction do
 
     context 'dispatches each operation' do
 
-      before :each do
-        described_class.new(client, plan).execute
-      end
+      let(:transaction) { described_class.new(client, plan, logger: logger) }
 
-      subject { described_class }
-      it { is_expected.to have_received(:perform).with(first_operation,client) }
+      before { 
+        allow(transaction).to receive(:perform)
+        transaction.execute
+      }
+
+      subject { transaction }
+      it { is_expected.to have_received(:perform).with(first_operation) }
     end
 
     it 'replaces $ref' do
@@ -50,20 +54,20 @@ describe Fn::Salesforce::Transaction do
       expect(third_operation).to receive(:replace_refs).
         with([first_operation,second_operation])
 
-      described_class.new(client, plan).execute
+      described_class.new(client, plan, logger: logger).execute
 
     end
 
     context 'when errors occur' do
 
-      before { allow(described_class).to receive(:perform) { |o,c|
+      before { allow(transaction).to receive(:perform) { |o,c|
         if o == second_operation
           raise Exception, "Operation bums this test suite out." 
         end
         o
       } }
 
-      let(:transaction) { described_class.new(client, plan) }
+      let(:transaction) { described_class.new(client, plan, logger: logger) }
       before { transaction.execute }
 
       context '#failed' do
@@ -79,10 +83,12 @@ describe Fn::Salesforce::Transaction do
     end
   end
 
-  context '.perform' do
+  context '#perform' do
 
-    let!(:transaction) { described_class.perform(operation, client) }
+    let(:transaction) { described_class.new(client, [operation], logger: logger) }
     let(:client) { spy("Client") }
+
+    before(:each){ transaction.execute }
 
     context 'when handling' do
 
@@ -122,7 +128,6 @@ describe Fn::Salesforce::Transaction do
         }) }
 
         it { is_expected.to have_received(:destroy!).with("Account", "1234") }
-
         
       end
 
@@ -153,15 +158,30 @@ describe Fn::Salesforce::Transaction do
         }
 
       end
-    end
 
-    context 'after handling' do
+      describe "an upsert operation" do
+        
+        let(:properties) { {
+          "Grand_Packet_extID__c" => "SMSTO:+22394806941:paquet 1449",
+          "Zone__r" => {
+            "Zone_Code__c" => "SID"
+          },
+          "Date_Sent__c" => "2015-10-13T16:34:28.094000"
+        } }
 
-      let(:operation) { Fn::Salesforce::Operation.new(properties: {}) }
-      subject { transaction }
+        let(:operation) { Fn::Salesforce::Operation.new({
+          "properties" => properties,
+          "action" => "upsert",
+          "externalID" => "Grand_Packet_extID__c",
+          "sObject" => "Packet__c"
+        }) }
 
-      it { is_expected.to eql operation }
-      
+        it {
+          is_expected.to have_received(:upsert!).
+            with("Packet__c", "Grand_Packet_extID__c", properties) 
+        }
+        
+      end
     end
 
   end
@@ -169,11 +189,11 @@ describe Fn::Salesforce::Transaction do
   context '#rollback!' do
 
     let(:result) { [{},{},{}] }
-    let(:transaction) { described_class.new(client, plan) }
+    let(:transaction) { described_class.new(client, plan, logger: logger) }
 
     before {
       allow(Fn::Salesforce::Rollback).to receive(:new).and_return result
-      allow(Fn::Salesforce::Transaction).to receive(:perform)
+      allow(transaction).to receive(:perform)
       allow(transaction).to receive(:result).and_return result
     }
 
@@ -183,7 +203,7 @@ describe Fn::Salesforce::Transaction do
     end
 
     it 'is expected to execute the rollback plan' do
-      expect(Fn::Salesforce::Transaction).to receive(:perform).exactly(3).times
+      expect(transaction).to receive(:perform).exactly(3).times
       transaction.rollback!
     end
     

@@ -86,6 +86,34 @@ the value without talking to Salesforce first.
 
 The array of objects received are assumed to be in a reliable order.
 
+### Message types
+
+**create**
+
+```js
+{
+  "sObject": "my__ObjectName__c",
+  "properties": {
+    "Id": "12345"
+  }
+} 
+```
+
+**upsert**
+
+```js
+{
+  "sObject": "my__ObjectName__c",
+  "properties": {
+    "Foo": "Bar",
+    "External_Baz__c": "Catatafish"
+  },
+  "action": "upsert",
+  "externalID": "External_Baz__c"
+} 
+```
+
+
 ## describe
 
 Returns the object description from Salesforce.

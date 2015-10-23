@@ -35,7 +35,8 @@ describe Fn::Salesforce do
     }
 
     let(:credentials) { spy("Credentials") }
-    let(:push) { Fn::Salesforce.push(credentials, message) }
+    let(:logger) { double }
+    let(:push) { Fn::Salesforce.push(credentials, message, logger: logger) }
 
     let(:client) { double("Client") }
     let(:plan) { double("Plan") }
@@ -62,7 +63,7 @@ describe Fn::Salesforce do
 
       context 'sets up the Transaction' do
         subject { Fn::Salesforce::Transaction }
-        it { is_expected.to have_received(:new).with(client, plan) }
+        it { is_expected.to have_received(:new).with(client, plan, logger: logger) }
       end
 
       context 'executes the transaction' do

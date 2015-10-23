@@ -31,9 +31,7 @@ module Fn
 
 
       def rollback!
-        Rollback.new(result).each { |operation|
-          perform(operation, client)
-        }
+        Rollback.new(result).each { |operation| perform(operation) }
       end
 
       private
@@ -73,9 +71,9 @@ module Fn
           logger.info "Deleting #{operation.s_object}(#{operation.Id})"
           client.destroy!(operation.sObject, operation.Id)
 
-        when :upsert #TODO
-          raise NotImplementedError
-          # client.upsert!
+        when :upsert
+          logger.info "Upserting #{operation.s_object}(#{operation.externalID})"
+          client.upsert!(operation.sObject, operation.externalID, operation.properties)
         else
           logger.warn "Warning: No action found for #{operation.inspect}. Skipping."
         end
