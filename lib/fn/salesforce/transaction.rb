@@ -76,8 +76,8 @@ module Fn
         when :upsert
           external_id_value = operation.properties[ operation.externalID ]
           logger.info "Upserting #{operation.s_object}(#{operation.externalID} => #{ external_id_value })"
-          operation.properties[ operation.externalID ] = URI.escape( external_id_value )
-          client.upsert!(operation.sObject, URI.escape( operation.externalID ), operation.properties)
+          operation.properties[ operation.externalID ] = URI.escape( external_id_value, /[+ ]/)
+          client.upsert!(operation.sObject, URI.escape( operation.externalID, /[+ ]/), operation.properties)
         else
           logger.warn "Warning: No action found for #{operation.inspect}. Skipping."
         end
